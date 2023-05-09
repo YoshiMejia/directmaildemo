@@ -10,6 +10,7 @@ const multer = require('multer');
 const { log } = require('console');
 
 const templateCompiler = require('./helpers/templateCompiler');
+const readConverted = require('./helpers/readConverted');
 
 const app = express();
 app.engine(
@@ -37,35 +38,10 @@ app.get('/', (req, res) => {
 });
 
 const convertedRouter = express.Router(); // Define a new router for showing the converted files
+
 convertedRouter.get('/success', (req, res) => {
-  // Read the contents of the 'converted' directory
   fs.readdir('converted', (err, files) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Error retrieving files');
-    } else {
-      // Generate an HTML response with a list of the files
-      const fileList = files
-        .map(
-          (filename) =>
-            `<li><a href="/converted/${filename}">${filename}</a></li>`
-        )
-        .join('');
-      const html = `
-              <html>
-                <head>
-                  <title>Converted Files</title>
-                </head>
-                <body>
-                  <h1>Converted Files</h1>
-                  <ul>
-                    ${fileList}
-                  </ul>
-                </body>
-              </html>
-            `;
-      res.send(html);
-    }
+    readConverted(res, err, files);
   });
 });
 
