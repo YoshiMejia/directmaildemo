@@ -6,7 +6,6 @@ const templateCompiler = require('./templateCompiler');
 
 let count = 0;
 const convertCSV = (req, res) => {
-  console.log('dirname:', __dirname);
   const data = [];
   // Grab name of template that was selected by user
   const selectedTemplate = req.body.template;
