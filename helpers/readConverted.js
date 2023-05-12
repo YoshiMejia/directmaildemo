@@ -1,25 +1,31 @@
-const readConverted = (res, err, files) => {
+const path = require('path');
+
+const readConverted = (res, err, files, folderPath) => {
   if (err) {
     console.log(err);
     res.status(500).send('Error retrieving files');
   } else {
-    // Generate an HTML response with a list of the files
+    // Generate an HTML response with a list of the files and a link to download the folder
     const fileList = files
-      .map(
-        (filename) =>
-          `<li><a href="/converted/${filename}">${filename}</a></li>`
-      )
+      .map((filename) => {
+        const filePath = path.join(folderPath, filename);
+        const relativePath = path.relative(folderPath, filePath);
+        return `<li><a href="/converted/${filename}">${relativePath}</a></li>`;
+      })
       .join('');
+    const folderName = path.basename(folderPath);
+    const downloadLink = `<a href="/download_converted/${folderName}">Download ${folderName}</a>`;
     const html = `
                 <html>
                   <head>
                     <title>Converted Files</title>
                   </head>
                   <body>
-                    <h1>Converted Files</h1>
+                    <h1>Converted Files ${folderName}</h1>
                     <ul>
                       ${fileList}
                     </ul>
+                    ${downloadLink}
                   </body>
                 </html>
               `;
