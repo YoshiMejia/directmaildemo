@@ -12,6 +12,7 @@
 /build
 
 /public/uploads
+/converted
 
 # misc
 .DS_Store
