@@ -1,3 +1,5 @@
+const archiver = require('archiver');
+
 const path = require('path');
 const express = require('express');
 const port = 8000;
@@ -36,7 +38,8 @@ const convertedRouter = express.Router(); // Define a new router for showing the
 
 convertedRouter.get('/success', (req, res) => {
   fs.readdir('converted', (err, files) => {
-    readConverted(res, err, files);
+    const folderPath = path.join(__dirname, 'converted');
+    readConverted(res, err, files, folderPath);
   });
 });
 
@@ -53,6 +56,47 @@ app.post('/convert', (req, res) => {
       convertCSV(req, res);
       res.redirect('/converted/success');
     }
+  });
+});
+
+app.get('/download_converted/:folderName', (req, res) => {
+  const folderName = 'converted';
+  const folderPath = path.join(__dirname, folderName);
+  const zipName = folderName + '.zip';
+  const zipPath = path.join(__dirname, zipName);
+
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  const output = fs.createWriteStream(zipPath);
+
+  archive.pipe(output);
+
+  // Add each file in the folder to the archive
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error creating ZIP file');
+      return;
+    }
+
+    files.forEach((filename) => {
+      const filePath = path.join(folderPath, filename);
+      archive.file(filePath, { name: filename });
+    });
+
+    archive.finalize();
+  });
+
+  output.on('close', () => {
+    res.download(zipPath);
+  });
+
+  archive.on('error', (err) => {
+    console.error(err);
+    res.status(500).send('Error creating ZIP file');
+  });
+
+  archive.on('finish', () => {
+    console.log(`ZIP file ${zipPath} created`);
   });
 });
 
