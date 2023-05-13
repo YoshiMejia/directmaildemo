@@ -2,7 +2,8 @@ const archiver = require('archiver');
 
 const path = require('path');
 const express = require('express');
-const port = 8000;
+// const port = 8000;
+const port = process.env.PORT || 3000;
 const fs = require('fs');
 const { engine } = require('express-handlebars');
 const multer = require('multer');
