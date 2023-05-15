@@ -16,6 +16,7 @@
 src/converted
 /dist
 /config
+todo.md
 
 # misc
 .DS_Store
@@ -23,7 +24,6 @@ src/converted
 .env.development.local
 .env.test.local
 .env.production.local
-todo.md
 
 npm-debug.log*
 yarn-debug.log*
