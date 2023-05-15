@@ -1,9 +1,7 @@
-const archiver = require('archiver');
-
+const cors = require('cors');
 const path = require('path');
 const express = require('express');
-// const port = 8000;
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 const fs = require('fs');
 const { engine } = require('express-handlebars');
 const multer = require('multer');
@@ -18,12 +16,13 @@ app.engine(
 );
 app.set('view engine', 'handlebars');
 
-app.use(express.static('public/uploads')); // makes this directory the static directory for uploads
+app.use(express.static('../public/uploads')); // makes this directory the static directory for uploads
 app.use('/converted', express.static('converted')); // Serve static files in the 'converted' directory
+app.use(cors());
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads');
+    cb(null, '../public/uploads');
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname));
@@ -54,7 +53,6 @@ app.post('/convert', (req, res) => {
       console.log(err);
       res.status(500).send('Error processing file upload');
     } else {
-      console.log('inside of index.js function');
       convertCSV(req, res);
       res.redirect('/converted/success');
     }

@@ -11,8 +11,11 @@
 # production
 /build
 
+#development
 /public/uploads
-/converted
+src/converted
+/dist
+/config
 
 # misc
 .DS_Store
