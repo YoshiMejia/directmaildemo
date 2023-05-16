@@ -2,12 +2,23 @@ const cors = require('cors');
 const path = require('path');
 const express = require('express');
 const port = process.env.PORT || 8000;
+const AWS = require('aws-sdk');
 const fs = require('fs');
 const { engine } = require('express-handlebars');
+const handlebars = require('handlebars');
+const templateCompiler = require('./helpers/templateCompiler');
+const csv = require('csv-parser');
 const multer = require('multer');
 const readConverted = require('./helpers/readConverted');
-const convertCSV = require('./helpers/convertCSV');
 const downloadConverted = require('./helpers/downloadConverted');
+
+AWS.config.update({
+  accessKeyId: 'AKIAQTX2CLHWRCLH4EWP',
+  secretAccessKey: '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',
+  region: 'us-west-1',
+});
+const dynamodb = new AWS.DynamoDB();
+const currentDate = new Date().toLocaleDateString('en-US');
 
 const app = express();
 app.engine(
@@ -47,14 +58,73 @@ convertedRouter.get('/success', (req, res) => {
 // Use the new router for the '/converted' route
 app.use('/converted', convertedRouter);
 
+//removed modularized convertCSV function from /convert endpoint due to HTTP HEADERS error caused by multer. at the moment this endpoint converts to CSV and also uploads to DynamoDB. Need to refactor in future.
 app.post('/convert', (req, res) => {
+  const currentTime = new Date().toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const milliseconds = new Date().getMilliseconds();
+  let count = 0;
   upload(req, res, (err) => {
     if (err) {
       console.log(err);
       res.status(500).send('Error processing file upload');
     } else {
-      convertCSV(req, res);
-      res.redirect('/converted/success');
+      const data = [];
+      const selectedTemplate = req.body.template;
+      console.log('line 157 selectedTemplate:', selectedTemplate);
+      const source = fs.readFileSync(
+        path.join(__dirname, 'views/layouts', `${selectedTemplate}.hbs`),
+        'utf8'
+      );
+      const template = handlebars.compile(source);
+      const convertedData = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (row) => {
+          count++;
+          const html = templateCompiler(selectedTemplate, row, template);
+          convertedData.push(html);
+          const outputName = `output-rowNum-${
+            count + '-' + currentTime + ' - ' + milliseconds
+          }.html`;
+          const outputPath = path.join(__dirname, 'converted', outputName);
+          fs.writeFile(outputPath, html, (err) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`File ${outputName} created successfully`);
+              const params = {
+                TableName: 'DirectMail',
+                Item: {
+                  filename: { S: outputName },
+                  dateCreated: { S: currentDate },
+                  htmlContent: { S: html },
+                  template: { S: selectedTemplate },
+                },
+              };
+              dynamodb.putItem(params, (err, data) => {
+                if (err) {
+                  console.error(err);
+                } else {
+                  console.log(
+                    `HTML file ${outputName} uploaded to DynamoDB successfully`
+                  );
+                  console.log('Response:', data);
+                }
+              });
+            }
+          });
+          data.push(row);
+        })
+        .on('end', () => {
+          console.log('CSV file successfully processed');
+          res.json({ convertedData });
+        });
     }
   });
 });
