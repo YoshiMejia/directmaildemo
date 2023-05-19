@@ -75,7 +75,6 @@ app.post('/convert', (req, res) => {
     } else {
       const data = [];
       const selectedTemplate = req.body.template;
-      console.log('line 157 selectedTemplate:', selectedTemplate);
       const source = fs.readFileSync(
         path.join(__dirname, 'views/layouts', `${selectedTemplate}.hbs`),
         'utf8'
@@ -114,7 +113,6 @@ app.post('/convert', (req, res) => {
                   console.log(
                     `HTML file ${outputName} uploaded to DynamoDB successfully`
                   );
-                  console.log('Response:', data);
                 }
               });
             }
