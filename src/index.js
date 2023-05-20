@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 require('dotenv').config({ path: '../.env' });
 const port = process.env.PORT;
-// const port = process.env.PORT || 8000;
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const { engine } = require('express-handlebars');
