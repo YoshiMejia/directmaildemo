@@ -1,7 +1,9 @@
 const cors = require('cors');
 const path = require('path');
 const express = require('express');
-const port = process.env.PORT || 8000;
+require('dotenv').config({ path: '../.env' });
+const port = process.env.PORT;
+// const port = process.env.PORT || 8000;
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const { engine } = require('express-handlebars');
@@ -13,8 +15,8 @@ const readConverted = require('./helpers/readConverted');
 const downloadConverted = require('./helpers/downloadConverted');
 
 AWS.config.update({
-  accessKeyId: 'AKIAQTX2CLHWRCLH4EWP',
-  secretAccessKey: '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',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_KEY,
   region: 'us-west-1',
 });
 const dynamodb = new AWS.DynamoDB();
